@@ -10,6 +10,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -26,13 +28,17 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 
 public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener,
+        View.OnClickListener{
     private final static String TAG = "MainActivity";
 
     private GoogleMap googleMap;
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
     private boolean requestingLocationUpdate;
+
+    private Location l = null;
+    private Button button;
 
     private enum UpdatingState {STOPPED, REQUESTING, STARTED}
 
@@ -43,6 +49,22 @@ public class MainActivity extends AppCompatActivity implements
             Manifest.permission.ACCESS_FINE_LOCATION
     };
     private final static int REQCODE_PERMISSIONS = 1111;
+
+    public void onClickButton(View v){
+        if(l == null)
+            return;
+        googleMap.animateCamera(CameraUpdateFactory
+                .newLatLng(new LatLng(l.getLatitude(), l.getLongitude())));
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.send_button:
+                onClickButton(v);
+                break;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +89,8 @@ public class MainActivity extends AppCompatActivity implements
         locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(5000);
         locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        button = (Button)findViewById(R.id.send_button);
+        button.setOnClickListener(this);
     }
 
     @Override
@@ -120,6 +144,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onLocationChanged(Location location) {
+        l = location;
         Log.d(TAG, "onLocationChanged: " + location);
         googleMap.animateCamera(CameraUpdateFactory
                 .newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
